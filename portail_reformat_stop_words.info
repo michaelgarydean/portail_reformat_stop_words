@@ -1,0 +1,5 @@
+name = "Reformater les titres contenant (les), (la) etc"
+description = "Placer les mots d'arrêt au debut des titres"
+core = 7.x
+package = Théatre québécois
+files[]=portail_reformat_stop_words.module

@@ -1,0 +1,113 @@
+<?php
+
+/**
+ * @file
+ * Module file for the portail_reformat_stop_words.module.
+ *
+ * This module is a solution to reformat titles that we're input with 'stop words'
+ * between brackets. The idea was that titles shouldn't be sorted using common words like
+ * 'les', 'la' etc.
+ *
+ * The module loads all the nodes from the content type, finds occurances of the stop words,
+ * removes them, and finally adds it to the beginning of the title. Node titles are then updated
+ * in the database.
+ *
+ * @see https://www.wunderlist.com/#/tasks/3026645045
+ * @author Michael Dean <contact@michaeldean.ca>
+ */
+
+/**
+ * Update left-over nodes that start with hyphens (that are did not contain stop words)
+ */
+function portail_reformat_stop_words_update_7402() {
+   /**
+    * @TODO If we're going to be doing more formatting in the future, move code that is the same
+    * in both update functions to it's own function...
+    */
+
+   //Load all the nodes of a specific content type
+   $node_type = "pi_ce";
+   $piece_nodes = node_load_multiple(array(), array('type' => $node_type));
+
+   //If the node has one of the stop words in it, reformat the title
+   foreach($piece_nodes as $node) {
+
+      //Copy title so we can manipulate it
+      $node_title = $node->title;
+
+      /**
+       * First remove the left-over titles with hyphens from last title reformatting
+       * @see https://www.wunderlist.com/#/tasks/3026645551
+       */
+      $node_title = ltrim($node_title,'-');
+            
+      //Update the node title, add a new revision, then save it
+      $node->title = $node_title;
+      $node->revision = 1;
+      $node->log = 'Node automatically updated from portail_reformat_stop_words module';
+      node_save($node);
+   }
+}
+
+/**
+ * Reformat all nodes of type 'piece' so stop words are place at beginning of the titles.
+ */ 
+function portail_reformat_stop_words_update_7401() {
+   //The stop words to remove and place at the beginning of the title
+   $stop_words = array("L'", "La", "Le", "Les");
+
+   //Load all the nodes of a specific content type
+   $node_type = "pi_ce";
+   $piece_nodes = node_load_multiple(array(), array('type' => $node_type));   
+
+   //If the node has one of the stop words in it, reformat the title
+   foreach($piece_nodes as $node) {
+
+      //Copy title so we can manipulate it
+      $node_title = $node->title;
+ 
+      /**
+       * First remove the left-over titles with hyphens from last title reformatting
+       * @see https://www.wunderlist.com/#/tasks/3026645551
+       */
+      $node_title = ltrim($node_title,'-');     
+ 
+      //Check for each stop word. Assumed it only occurs once.
+      foreach($stop_words as $stop_word) {
+
+         //In the titles, there are parentheses placed around each stop word
+         $stop_word_parentheses = '(' . $stop_word . ')';
+
+         //Get the position (not-false) of the stop word if it is found in the title
+         $stop_word_pos = strpos($node->title,$stop_word_parentheses);
+     
+         //Format the title if it contains a stop word in its title 
+         if($stop_word_pos !== false) {
+
+            //Remove the stop word from the title
+            $node_title = str_replace($stop_word_parentheses,'',$node_title);
+
+            /**
+             * Deal with spacing between stop word and beginning of title
+             * (L') is a special case because it doesn't need a space between the word
+             */            
+            $space = ' ';
+
+            if($stop_word === "L'") {
+               $space = '';
+            }
+            
+            $node_title = $stop_word . $space . $node_title;
+
+            //Update the node title, add a new revision, then save it
+            $node->title = $node_title;
+            $node->revision = 1;
+            $node->log = 'Node automatically updated from portail_reformat_stop_words module';
+            node_save($node);
+
+            //Don't bother looking for more stop words in this title. We assume only one.
+            break;
+         }
+      }
+   }
+ }
