@@ -17,6 +17,27 @@
  */
 
 /**
+ * Remove any remaining hyphens at the beginning of Piece titles.
+ */
+function portail_reformat_stop_words_update_7403() {
+   //Load all the nodes from the piece content type
+   $node_type = "pi_ce";
+   $piece_nodes = node_load_multiple(array(), array('type' => $node_type));
+
+   //Check each node to see if it starts with a hyphen
+   foreach($piece_nodes as $node) {
+
+      //Only do a node save if a hyphen is removed.
+      if(substr($node->title, 0, 1) === '-') {
+         $node->title = ltrim($node->title,'-');
+         $node->revision = 1;
+         $node->log = 'Hyphen removed automatically from portail_reformat_stop_words module';
+         node_save($node); 
+      }
+   }
+}
+
+/**
  * Copy the title field to the field_sorting field
  */
 function portail_reformat_stop_words_update_7401() {
