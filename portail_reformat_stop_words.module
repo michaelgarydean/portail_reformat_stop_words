@@ -17,42 +17,25 @@
  */
 
 /**
- * Update left-over nodes that start with hyphens (that are did not contain stop words)
+ * Copy the title field to the field_sorting field
  */
-function portail_reformat_stop_words_update_7402() {
-   /**
-    * @TODO If we're going to be doing more formatting in the future, move code that is the same
-    * in both update functions to it's own function...
-    */
+function portail_reformat_stop_words_update_7401() {
 
-   //Load all the nodes of a specific content type
+   //Load all the nodes from the piece content type
    $node_type = "pi_ce";
    $piece_nodes = node_load_multiple(array(), array('type' => $node_type));
-
-   //If the node has one of the stop words in it, reformat the title
+   
+   //Copy the title to the sorting field and save every node
    foreach($piece_nodes as $node) {
-
-      //Copy title so we can manipulate it
-      $node_title = $node->title;
-
-      /**
-       * First remove the left-over titles with hyphens from last title reformatting
-       * @see https://www.wunderlist.com/#/tasks/3026645551
-       */
-      $node_title = ltrim($node_title,'-');
-            
-      //Update the node title, add a new revision, then save it
-      $node->title = $node_title;
-      $node->revision = 1;
-      $node->log = 'Node automatically updated from portail_reformat_stop_words module';
-      node_save($node);
+      $node->field_sorting = $node->title;
+      node_save($node);   
    }
 }
 
 /**
  * Reformat all nodes of type 'piece' so stop words are place at beginning of the titles.
  */ 
-function portail_reformat_stop_words_update_7401() {
+function portail_reformat_stop_words_update_7402() {
    //The stop words to remove and place at the beginning of the title
    $stop_words = array("L'", "La", "Le", "Les");
 
@@ -71,7 +54,7 @@ function portail_reformat_stop_words_update_7401() {
        * @see https://www.wunderlist.com/#/tasks/3026645551
        */
       $node_title = ltrim($node_title,'-');     
- 
+
       //Check for each stop word. Assumed it only occurs once.
       foreach($stop_words as $stop_word) {
 
