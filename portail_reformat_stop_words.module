@@ -19,17 +19,23 @@
 /**
  * Copy the title field to the field_sorting field
  */
-//function portail_reformat_stop_words_update_7402() {
-function portail_reformat_stop_words_node_view_alter($build) {
+function portail_reformat_stop_words_update_7401() {
    //Load all the nodes from the piece content type
    $node_type = "pi_ce";
    $piece_nodes = node_load_multiple(array(), array('type' => $node_type));
    
    //Copy the title to the sorting field
    foreach($piece_nodes as $node) {
+      /**
+       * First remove the left-over titles with hyphens from last title reformatting
+       * @see https://www.wunderlist.com/#/tasks/3026645551
+       */
+      $node->title = ltrim($node->title,'-');
 
-      //Copy the field and save field data
+      //Copy the field
       $node->field_sorting['und'][0]['value'] = $node->title;
+
+      //Save the updated node
       field_attach_update('node', $node);
    }
 }
@@ -37,7 +43,7 @@ function portail_reformat_stop_words_node_view_alter($build) {
 /**
  * Reformat all nodes of type 'piece' so stop words are place at beginning of the titles.
  */ 
-function portail_reformat_stop_words_update_7401() {
+function portail_reformat_stop_words_update_7402() {
    //The stop words to remove and place at the beginning of the title
    $stop_words = array("L'", "La", "Le", "Les");
 
@@ -48,14 +54,13 @@ function portail_reformat_stop_words_update_7401() {
    //If the node has one of the stop words in it, reformat the title
    foreach($piece_nodes as $node) {
 
-      //Copy title so we can manipulate it
-      $node_title = $node->title;
- 
       /**
        * First remove the left-over titles with hyphens from last title reformatting
        * @see https://www.wunderlist.com/#/tasks/3026645551
        */
-      $node_title = ltrim($node_title,'-');     
+      $node->title = ltrim($node->title,'-');
+ 
+      $node_title = $node->title;
 
       //Check for each stop word. Assumed it only occurs once.
       foreach($stop_words as $stop_word) {
@@ -64,7 +69,7 @@ function portail_reformat_stop_words_update_7401() {
          $stop_word_parentheses = '(' . $stop_word . ')';
 
          //Get the position (not-false) of the stop word if it is found in the title
-         $stop_word_pos = strpos($node->title,$stop_word_parentheses);
+         $stop_word_pos = strpos($node_title,$stop_word_parentheses);
      
          //Format the title if it contains a stop word in its title 
          if($stop_word_pos !== false) {
@@ -87,7 +92,7 @@ function portail_reformat_stop_words_update_7401() {
             //Update the node title, add a new revision, prepare for saving
             $node->title = $node_title;
             $node->revision = 1;
-            $node->log = 'Node automatically updated from portail_reformat_stop_words module';
+            $node->log = 'Stop words removed automatically from portail_reformat_stop_words module';
             node_save($node);
  
            //Don't bother looking for more stop words in this title. If one is already found, we're done.
