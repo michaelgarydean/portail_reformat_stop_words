@@ -4,7 +4,7 @@
  * @file
  * Module file for the portail_reformat_stop_words.module.
  *
- * This module is a solution to reformat titles that we're input with 'stop words'
+ * This module is a solution to reformat titles that were input with 'stop words'
  * between brackets. The idea was that titles shouldn't be sorted using common words like
  * 'les', 'la' etc.
  *
@@ -99,15 +99,17 @@ function portail_reformat_stop_words_update_7401() {
             
             $node_title = $stop_word . $space . $node_title;
 
-            //Update the node title, add a new revision, then save it
+            //Update the node title, add a new revision, prepare for saving
             $node->title = $node_title;
             $node->revision = 1;
             $node->log = 'Node automatically updated from portail_reformat_stop_words module';
-            node_save($node);
 
-            //Don't bother looking for more stop words in this title. We assume only one.
+            //Don't bother looking for more stop words in this title. If one is already found, we're done.
             break;
          }
       }
    }
+
+   //Save every node to fix a few left over issues from editing the revisions table with SQL
+   node_save($node);
  }
