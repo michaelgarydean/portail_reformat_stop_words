@@ -19,23 +19,25 @@
 /**
  * Copy the title field to the field_sorting field
  */
-function portail_reformat_stop_words_update_7401() {
-
+//function portail_reformat_stop_words_update_7402() {
+function portail_reformat_stop_words_node_view_alter($build) {
    //Load all the nodes from the piece content type
    $node_type = "pi_ce";
    $piece_nodes = node_load_multiple(array(), array('type' => $node_type));
    
-   //Copy the title to the sorting field and save every node
+   //Copy the title to the sorting field
    foreach($piece_nodes as $node) {
-      $node->field_sorting = $node->title;
-      node_save($node);   
+
+      //Copy the field and save field data
+      $node->field_sorting['und'][0]['value'] = $node->title;
+      field_attach_update('node', $node);
    }
 }
 
 /**
  * Reformat all nodes of type 'piece' so stop words are place at beginning of the titles.
  */ 
-function portail_reformat_stop_words_update_7402() {
+function portail_reformat_stop_words_update_7401() {
    //The stop words to remove and place at the beginning of the title
    $stop_words = array("L'", "La", "Le", "Les");
 
@@ -86,13 +88,12 @@ function portail_reformat_stop_words_update_7402() {
             $node->title = $node_title;
             $node->revision = 1;
             $node->log = 'Node automatically updated from portail_reformat_stop_words module';
-
-            //Don't bother looking for more stop words in this title. If one is already found, we're done.
+            node_save($node);
+ 
+           //Don't bother looking for more stop words in this title. If one is already found, we're done.
             break;
          }
       }
    }
 
-   //Save every node to fix a few left over issues from editing the revisions table with SQL
-   node_save($node);
  }
